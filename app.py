@@ -82,3 +82,21 @@ if log_path.exists():
 
 else:
     st.warning("No best_bets_log.csv found yet. Run the pipeline to generate top 5 picks.")
+
+
+st.markdown("---")
+st.header("📈 Model Performance Summary")
+
+if "correct" in log_df.columns:
+    performance = (
+        log_df[log_df["correct"].isin([0, 1])]
+        .groupby(["date", "type"])["correct"]
+        .agg(["count", "sum"])
+        .rename(columns={"count": "total", "sum": "wins"})
+    )
+    performance["losses"] = performance["total"] - performance["wins"]
+    performance["win_rate"] = (performance["wins"] / performance["total"]).round(2)
+
+    st.dataframe(performance)
+else:
+    st.info("Prediction results not tracked yet. Add 'Win' or 'Loss' to your log.")

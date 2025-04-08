@@ -60,7 +60,9 @@ def append_best_bets_log(df):
         "line": row["spread_line"],
         "model_pick": row["model_spread_pick"],
         "confidence": row["model_spread_conf"],
-        "edge": round(row["spread_edge"], 2)
+        "edge": round(row["spread_edge"], 2),
+        "result": "",   # <-- placeholder to be manually updated
+        "correct": ""   # <-- optional: 1 for win, 0 for loss
     }, axis=1).tolist()
 
     # Top 5 total picks by confidence
@@ -73,7 +75,9 @@ def append_best_bets_log(df):
         "line": row["total_line"],
         "model_pick": row["model_total_pick"],
         "confidence": row["model_total_conf"],
-        "edge": ""
+        "edge": "",
+        "result": "",
+        "correct": ""
     }, axis=1).tolist()
 
     all_rows = spread_rows + total_rows
@@ -85,6 +89,7 @@ def append_best_bets_log(df):
         new_df.to_csv(log_path, index=False)
 
     print(f"📊 Appended top 5 spread & total picks to {log_file}")
+
 
 
 def run_predictions():
