@@ -1,28 +1,25 @@
 ﻿import pandas as pd
 
-# Load odds and scores
+# === LOAD CLEANED SPORTS DATA ===
 odds_df = pd.read_csv("mlb_opening_lines_clean.csv")
 scores_df = pd.read_csv("espn_scores.csv")
 
-# Normalize column cases and team names
+# Normalize team and date
 def normalize_team(name):
     return name.strip().upper() if pd.notnull(name) else name
 
-# ✅ Apply changes directly to each DataFrame
 odds_df["GameDate"] = pd.to_datetime(odds_df["GameDate"]).dt.date
 odds_df["HomeTeam"] = odds_df["HomeTeam"].apply(normalize_team)
 odds_df["AwayTeam"] = odds_df["AwayTeam"].apply(normalize_team)
 
-scores_df["GameDate"] = pd.to_datetime(scores_df["Date"]).dt.date  # 🛠 handle ESPN's "Date" column
+scores_df["GameDate"] = pd.to_datetime(scores_df["Date"]).dt.date
 scores_df["HomeTeam"] = scores_df["Home Team"].apply(normalize_team)
 scores_df["AwayTeam"] = scores_df["Away Team"].apply(normalize_team)
 scores_df["HomeScore"] = scores_df["Home Score"]
 scores_df["AwayScore"] = scores_df["Away Score"]
-
-# Only keep what we need from scores
 scores_df = scores_df[["GameDate", "HomeTeam", "AwayTeam", "HomeScore", "AwayScore"]]
 
-# Merge datasets
+# === MERGE SCORES + ODDS ===
 merged = pd.merge(
     odds_df,
     scores_df,
@@ -30,10 +27,36 @@ merged = pd.merge(
     how="inner"
 )
 
-# Drop duplicate games by GameId
+# === LOAD AND MERGE ESPN ODDS (IF AVAILABLE) ===
+try:
+    espn_odds = pd.read_csv("espn_odds.csv")
+    espn_odds["GameDate"] = pd.to_datetime(espn_odds["GameDate"]).dt.date
+    espn_odds["HomeTeam"] = espn_odds["HomeTeam"].apply(normalize_team)
+    espn_odds["AwayTeam"] = espn_odds["AwayTeam"].apply(normalize_team)
+
+    merged = pd.merge(
+        merged,
+        espn_odds[["GameDate", "HomeTeam", "AwayTeam", "Spread", "Total"]],
+        on=["GameDate", "HomeTeam", "AwayTeam"],
+        how="left",
+        suffixes=("", "_ESPN")
+    )
+
+    # Use ESPN odds when available
+    merged["OpeningPointSpread"] = merged["Spread"].combine_first(merged["OpeningPointSpread"])
+    merged["OpeningOverUnder"] = merged["Total"].combine_first(merged["OpeningOverUnder"])
+
+except Exception as e:
+    print("⚠️ ESPN odds not merged:", e)
+
+# === SANITY CHECK / CLAMP ===
+merged["OpeningPointSpread"] = merged["OpeningPointSpread"].clip(-2.0, 2.0)
+merged["OpeningOverUnder"] = merged["OpeningOverUnder"].clip(6.0, 11.0)
+
+# === DROP DUPLICATES ===
 merged.drop_duplicates(subset=["GameId"], inplace=True)
 
-# Determine outcome
+# === CALCULATE OUTCOMES ===
 merged["Winner"] = merged.apply(
     lambda r: "Home" if r["HomeScore"] > r["AwayScore"]
     else "Away" if r["AwayScore"] > r["HomeScore"]
@@ -41,24 +64,22 @@ merged["Winner"] = merged.apply(
     axis=1
 )
 
-# Favorite by moneyline
 merged["Favorite"] = merged.apply(
     lambda r: "Home" if r["OpeningHomeMoneyLine"] < r["OpeningAwayMoneyLine"]
     else "Away",
     axis=1
 )
 
-# Accuracy
 merged["CorrectSide"] = merged["Winner"] == merged["Favorite"]
 merged["TotalRuns"] = merged["HomeScore"] + merged["AwayScore"]
 merged["OverHit"] = merged["TotalRuns"] > merged["OpeningOverUnder"]
 merged["UnderHit"] = merged["TotalRuns"] < merged["OpeningOverUnder"]
 merged["PushTotal"] = merged["TotalRuns"] == merged["OpeningOverUnder"]
 
-# Save to CSV
+# === EXPORT ===
 merged.to_csv("comparison.csv", index=False)
 
-# Summary
+# === SUMMARY ===
 print("\n===== LINE ACCURACY SUMMARY =====")
 print(f"Games matched:            {len(merged)}")
 print(f"Correct moneyline picks:  {merged['CorrectSide'].sum()} ({merged['CorrectSide'].mean():.1%})")

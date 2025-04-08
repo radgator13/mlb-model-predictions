@@ -22,12 +22,20 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="app.py" />
+    <Compile Include="clean_project.py" />
+    <Compile Include="dk_odds_scraper.py" />
     <Compile Include="ESPN _Scraper.py" />
-    <Compile Include="espn_scrape.py" />
     <Compile Include="Find Data.py" />
     <Compile Include="MLB_Model_Success.py" />
+    <Compile Include="predict_today.py" />
     <Compile Include="run_pipeline.py" />
     <Compile Include="Sports_Data_IO.py" />
+    <Compile Include="train_ou_model.py" />
+    <Compile Include="train_win_regression_model.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include=".gitignore" />
+    <Content Include="train_win_model.py" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
