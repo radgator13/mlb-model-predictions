@@ -1,7 +1,6 @@
 ﻿import subprocess
 from pathlib import Path
 
-# Get the directory where this script lives
 SCRIPT_DIR = Path(__file__).resolve().parent
 
 def run_script(script_name):
@@ -16,7 +15,6 @@ def git_commit_push(files, message):
     print("📦 Committing and pushing to GitHub...")
     subprocess.run(["git", "add"] + files, check=True)
 
-    # Check if any files were staged before committing
     result = subprocess.run(["git", "diff", "--cached", "--quiet"])
     if result.returncode == 0:
         print("✅ No changes to commit.")
@@ -27,7 +25,7 @@ def git_commit_push(files, message):
 
 if __name__ == "__main__":
     try:
-        # === Run fresh prediction only
+        # === Run fresh prediction
         run_script("predict_today.py")
 
         # === Find the latest prediction file
@@ -35,8 +33,16 @@ if __name__ == "__main__":
         latest_prediction = predictions[0].name if predictions else None
 
         if latest_prediction:
+            # === Only commit necessary files
             git_commit_push(
-                ["."] ,  # Add all changes in current folder
+                [
+                    latest_prediction,
+                    "app.py",
+                    "predict_today.py",
+                    "run_pipeline.py",
+                    "win_model.pkl",
+                    "ou_model.pkl"
+                ],
                 f"🔁 Daily model update: {latest_prediction}"
             )
         else:
