@@ -66,39 +66,15 @@ log_path = Path("best_bets_log.csv")
 if log_path.exists():
     log_df = pd.read_csv(log_path)
 
-    # Display full log table
+    # === Full log
     st.dataframe(log_df, use_container_width=True)
 
-    # === Daily Summary (basic count only)
-    st.markdown("### 🔢 Daily Summary: Wins & Losses")
-
-    # Count daily picks
-    daily_counts = log_df.groupby(["date", "type"]).size().unstack(fill_value=0)
-
-    st.dataframe(daily_counts)
-
-    # === Optional: calculate win/loss if you add outcome tracking later
-    # For now, we just show how many spread/total picks were made per day
-
-else:
-    st.warning("No best_bets_log.csv found yet. Run the pipeline to generate top 5 picks.")
-
-
-st.markdown("---")
-st.header("📊 Best Bets Log (Top 5 Daily Picks)")
-
-log_path = Path("best_bets_log.csv")
-if log_path.exists():
-    log_df = pd.read_csv(log_path)
-
-    st.dataframe(log_df, use_container_width=True)
-
-    # === Daily summary
+    # === Pick count summary
     st.markdown("### 📅 Daily Pick Count Summary")
     daily_counts = log_df.groupby(["date", "type"]).size().unstack(fill_value=0)
     st.dataframe(daily_counts)
 
-    # === Model win/loss performance
+    # === Win/loss performance
     if "correct" in log_df.columns:
         st.markdown("### 🧮 Daily Performance (Wins / Losses)")
         perf = (
