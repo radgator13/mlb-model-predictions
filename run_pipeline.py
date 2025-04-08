@@ -25,21 +25,25 @@ def git_commit_push(files, message):
 
 if __name__ == "__main__":
     try:
-        # === Run fresh prediction
+        # === Run prediction script
         run_script("predict_today.py")
+
+        # === Run scoring script to update best_bets_log.csv
+        run_script("score_best_bets.py")
 
         # === Find the latest prediction file
         predictions = sorted(SCRIPT_DIR.glob("mlb_predictions_*.csv"), reverse=True)
         latest_prediction = predictions[0].name if predictions else None
 
         if latest_prediction:
-            # === Only commit necessary files
             git_commit_push(
                 [
                     latest_prediction,
                     "app.py",
                     "predict_today.py",
                     "run_pipeline.py",
+                    "score_best_bets.py",
+                    "best_bets_log.csv",
                     "win_model.pkl",
                     "ou_model.pkl"
                 ],
