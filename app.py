@@ -85,18 +85,31 @@ else:
 
 
 st.markdown("---")
-st.header("📈 Model Performance Summary")
+st.header("📊 Best Bets Log (Top 5 Daily Picks)")
 
-if "correct" in log_df.columns:
-    performance = (
-        log_df[log_df["correct"].isin([0, 1])]
-        .groupby(["date", "type"])["correct"]
-        .agg(["count", "sum"])
-        .rename(columns={"count": "total", "sum": "wins"})
-    )
-    performance["losses"] = performance["total"] - performance["wins"]
-    performance["win_rate"] = (performance["wins"] / performance["total"]).round(2)
+log_path = Path("best_bets_log.csv")
+if log_path.exists():
+    log_df = pd.read_csv(log_path)
 
-    st.dataframe(performance)
+    st.dataframe(log_df, use_container_width=True)
+
+    # === Daily summary
+    st.markdown("### 📅 Daily Pick Count Summary")
+    daily_counts = log_df.groupby(["date", "type"]).size().unstack(fill_value=0)
+    st.dataframe(daily_counts)
+
+    # === Model win/loss performance
+    if "correct" in log_df.columns:
+        st.markdown("### 🧮 Daily Performance (Wins / Losses)")
+        perf = (
+            log_df[log_df["correct"].isin([0, 1])]
+            .groupby(["date", "type"])["correct"]
+            .agg(["count", "sum"])
+            .rename(columns={"count": "total", "sum": "wins"})
+        )
+        perf["losses"] = perf["total"] - perf["wins"]
+        perf["win_rate"] = (perf["wins"] / perf["total"]).round(2)
+        st.dataframe(perf)
+
 else:
-    st.info("Prediction results not tracked yet. Add 'Win' or 'Loss' to your log.")
+    st.warning("No best_bets_log.csv found yet. Run the pipeline to generate top 5 picks.")
