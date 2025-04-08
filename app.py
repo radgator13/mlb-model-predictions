@@ -40,3 +40,21 @@ columns_to_display = [
 
 
 st.dataframe(df[columns_to_display], use_container_width=True)
+st.markdown("---")
+st.header("🔥 Top 5 Best Spread Picks (by Edge)")
+
+top_spread = df.sort_values("spread_edge", ascending=False).head(5)
+st.dataframe(top_spread[[
+    "home_team", "away_team", "spread_line",
+    "model_spread_pick", "spread_edge", "model_spread_conf"
+]])
+
+st.markdown("### ")
+
+st.header("🔥 Top 5 Best Total Picks (by Confidence)")
+
+top_total = df.sort_values("model_total_conf", ascending=False).head(5)
+st.dataframe(top_total[[
+    "home_team", "away_team", "total_line",
+    "model_total_pick", "model_total_conf"
+]])
