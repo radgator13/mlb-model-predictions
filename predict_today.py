@@ -36,6 +36,57 @@ def fireball_from_prob(prob):
     elif prob >= 0.50: return "🔥"
     else: return "No Edge"
 
+from datetime import date
+
+def append_best_bets_log(df):
+    today = date.today().isoformat()
+    log_file = "best_bets_log.csv"
+    log_path = Path(log_file)
+
+    # If log exists, check if today's date is already logged
+    if log_path.exists():
+        existing_log = pd.read_csv(log_path)
+        if today in existing_log["date"].astype(str).unique():
+            print(f"⏭️ Skipped logging: best bets for {today} already recorded.")
+            return
+
+    # Top 5 spread picks by edge
+    top_spread = df.sort_values("spread_edge", ascending=False).head(5)
+    spread_rows = top_spread.apply(lambda row: {
+        "date": today,
+        "type": "spread",
+        "home_team": row["home_team"],
+        "away_team": row["away_team"],
+        "line": row["spread_line"],
+        "model_pick": row["model_spread_pick"],
+        "confidence": row["model_spread_conf"],
+        "edge": round(row["spread_edge"], 2)
+    }, axis=1).tolist()
+
+    # Top 5 total picks by confidence
+    top_total = df.sort_values("model_total_conf", ascending=False).head(5)
+    total_rows = top_total.apply(lambda row: {
+        "date": today,
+        "type": "total",
+        "home_team": row["home_team"],
+        "away_team": row["away_team"],
+        "line": row["total_line"],
+        "model_pick": row["model_total_pick"],
+        "confidence": row["model_total_conf"],
+        "edge": ""
+    }, axis=1).tolist()
+
+    all_rows = spread_rows + total_rows
+    new_df = pd.DataFrame(all_rows)
+
+    if log_path.exists():
+        new_df.to_csv(log_path, mode="a", header=False, index=False)
+    else:
+        new_df.to_csv(log_path, index=False)
+
+    print(f"📊 Appended top 5 spread & total picks to {log_file}")
+
+
 def run_predictions():
     df = load_latest_clean_lines()
 
@@ -84,6 +135,7 @@ def run_predictions():
     today = datetime.now().strftime("%Y%m%d")
     out_file = f"mlb_predictions_{today}.csv"
     df_out.to_csv(out_file, index=False)
+    append_best_bets_log(df)
 
     print(f"\n✅ Predictions saved to: {out_file}")
     print("📊 Includes picks, edges, fireball confidence, and clean labeling.")
