@@ -1,7 +1,7 @@
+streamlit
 pandas
 joblib
 scikit-learn
-streamlit
-beautifulsoup4
 lxml
+beautifulsoup4
 selenium
