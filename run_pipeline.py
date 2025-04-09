@@ -37,16 +37,22 @@ if __name__ == "__main__":
 
         if latest_prediction:
             git_commit_push(
-                [
-                    latest_prediction,
-                    "app.py",
-                    "predict_today.py",
-                    "run_pipeline.py",
-                    "score_best_bets.py",
-                    "best_bets_log.csv",
-                    "win_model.pkl",
-                    "ou_model.pkl"
-                ],
+    [
+        latest_prediction,
+        "app.py",
+        "predict_today.py",
+        "run_pipeline.py",
+        "train_model.py",
+        "score_best_bets.py",
+        "espn_team_offense.csv",
+        "espn_team_defense.csv",
+        # "espn_team_fielding.csv",  # 🔒 temporarily removed
+        "archive/comparison.csv",
+        "best_bets_log.csv",
+        "ou_model.pkl",
+        "win_model.pkl"
+    ],
+
                 f"🔁 Daily model update: {latest_prediction}"
             )
         else:
