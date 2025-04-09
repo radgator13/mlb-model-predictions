@@ -1,0 +1,7 @@
+pandas
+joblib
+scikit-learn
+streamlit
+beautifulsoup4
+lxml
+selenium
